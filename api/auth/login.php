@@ -16,8 +16,18 @@ if ($api == 'usuarios') {
             }
 
 
+
+
             $login = addslashes(htmlspecialchars($dados['login'])) ?? '';
             $senha = addslashes(htmlspecialchars($dados['senha'])) ?? '';
+
+            if (!is_numeric($login)) {
+                echo json_encode([
+                    'error' => true,
+                    "message" => "O valor do login deve ser um número."
+                ]);
+                exit;
+            }
 
             $loginResponse = Usuarios::login($login, $senha);
             $autorizacaoResponse = Usuarios::autorizar('acesso_tela_principal', $login);
