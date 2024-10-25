@@ -8,7 +8,8 @@ class Usuarios
         $secretJWT = $GLOBALS['secretJWT'];
 
         $db = DB::connect();
-        $rs = $db->prepare("SELECT usuarios.nome, usuarios.matricula, autenticacao.senha, usuarios.idgerencia FROM usuarios, autenticacao WHERE usuarios.matricula = autenticacao.matricula and  usuarios.matricula = ?");
+        // $rs = $db->prepare("SELECT usuarios.nome, usuarios.matricula, usuarios.senha FROM usuarios where usuarios.matricula = ?");
+        $rs = $db->prepare("SELECT * FROM usuarios where usuarios.matricula = ?");
         $exec = $rs->execute([$login]);
         $obj = $rs->fetchObject();
         $rows = $rs->rowCount();
@@ -24,6 +25,7 @@ class Usuarios
             $validUsername = false;
             $validPassword = false;
         }
+        
 
         if ($validUsername and $validPassword) {
             //$nextWeek = time() + (7 * 24 * 60 * 60);
@@ -34,15 +36,29 @@ class Usuarios
                 'expires_in' => $expire_in,
             ], $GLOBALS['secretJWT']);
 
-            $sql = $db->prepare("UPDATE autenticacao SET token = ? WHERE matricula = ?");
+            // var_dump($token);
+            // exit;
+
+            $sql = $db->prepare("UPDATE usuarios SET token = ? WHERE matricula = ?");
             $sql->execute([$token, $idDB]);
+            $sql = $db->prepare("SELECT * from autorizacao where matricula = ?");
+            $sql->execute([$idDB]);
+            $obj2 = $sql->fetch(PDO::FETCH_ASSOC);
+
+            $permissoes = array_slice($obj2, 1);
             return [
                 'error' => false,
+                'message' => "Usuário logado",
                 'token' => $token,
                 'data' => [
-                    "matricula" =>  $obj->matricula,
-                    "nome"      =>  $obj->nome,
-                    "gerencia"  =>  $obj->idgerencia
+                    "matricula"     =>  $obj->matricula,
+                    "nome"          =>  $obj->nome,
+                    "turma"         =>  $obj->turma,
+                    "email"         =>  $obj->email,
+                    "url_perfil"    =>  $obj->url_perfil,
+                    "url_status"    =>  $obj->url_status,
+                    "gerencia"      =>  $obj->gerencia,
+                    "permissoes"    => $permissoes
                 ]
             ];
         } else if (!$validPassword) {
@@ -57,70 +73,72 @@ class Usuarios
     public static function validarToken($login)
     {
         $headers = getallheaders();
-        if (isset($headers['authorization'])) {
-            $token = $headers['authorization'];
-        } else {
-            return false;
+        if (!isset($headers['authorization'])) {
+            return [
+                "error" => true,
+                "message" => "Header authorization está ausente!"
+            ];
         }
-
+        
+        $token = $headers['authorization'];
 
 
         $db   = DB::connect();
-        $rs   = $db->prepare("SELECT * FROM autenticacao WHERE token = ? and matricula = ?");
+        $rs   = $db->prepare("SELECT * FROM usuarios WHERE token = ? and matricula = ?");
         $exec = $rs->execute([$token, $login]);
         $obj  = $rs->fetchObject();
         $rows = $rs->rowCount();
         $secretJWT = $GLOBALS['secretJWT'];
 
+        
         if ($rows > 0) {
             $tokenDB = $obj->token;
 
             $decodedJWT = JWT::decode($tokenDB, $secretJWT);
             if ($decodedJWT->expires_in > time()) {
-                return true;
+                return [
+                    "error" => false,
+                    "message" => "Usuário autenticado."
+                ];
             } else {
-                $sql = $db->prepare("UPDATE autenticacao SET token = '' WHERE matricula = ?");
+                $sql = $db->prepare("UPDATE usuarios SET token = '' WHERE matricula = ?");
                 $sql->execute([$login]);
-                return false;
+                return [
+                    "error" => true,
+                    "message" => "Login expirado!"
+                ];
             }
         } else {
-            return false;
+            return [
+                "error" => true,
+                "message" => "Usuário não está logado ou o token é inválido!"
+            ];
         }
     }
 
-    public static function autorizar($funcao, $login)
+    public static function autorizar($acao, $login)
     {
-        // $headers = getallheaders();
-        // if (isset($headers['authorization'])) {
-        //     $token = $headers['authorization'];
-        // } else {
-        //     return false;
-        // }
-        // $secretJWT = $GLOBALS['secretJWT'];
-        // $decodedJWT = JWT::decode($token, $secretJWT);
+        $db = DB::connect();
+        $sql = $db->prepare("SELECT * FROM autorizacao WHERE matricula = ?");
+        $sql->execute([$login]);
+        $obj = $sql->fetch(PDO::FETCH_ASSOC);
 
-        if ($funcao == 'supervisores') {
-            $db = DB::connect();
-            $sql = $db->prepare("SELECT * FROM autorizacao WHERE matricula = ? and gerarescala = true");
-            $sql->execute([$login]);
-            $obj = $sql->fetch(PDO::FETCH_ASSOC);
-
-            if (!$obj) {
-                return false;
-            } else {
-                return true;
-            }
-        } else if ($funcao == 'operadores') {
-            $db = DB::connect();
-            $sql = $db->prepare("SELECT * FROM autorizacao WHERE matricula = ? and visualizarescala = true");
-            $sql->execute([$login]);
-            $obj = $sql->fetch(PDO::FETCH_ASSOC);
-
-            if (!$obj) {
-                return false;
-            } else {
-                return true;
-            }
+        if (!$obj) {
+            return [
+                'error' => true,
+                'message' => 'Usuário não encontrado.'
+            ];
+        } else if($obj[$acao]){
+            return [
+                'error' => false,
+                'message' => 'Usuário autorizado',
+            ];
+        } 
+        else {
+            return [
+                'error' => true,
+                'message' => 'Usuário não autorizado.'
+            ];
         }
     }
 }

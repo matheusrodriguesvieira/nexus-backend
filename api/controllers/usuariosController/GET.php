@@ -73,10 +73,10 @@ if ($acao == 'index' && $parametro == '') {
         
             $obj[$i]['ocorrenciasPorMes'] = $meses;
         }
-// var_dump($obj);
         $response = array(
             "error" => false,
-            "message" => $obj
+            "message" => "sucesso",
+            "data" => $obj
         );
         echo json_encode($response);
 
@@ -148,7 +148,8 @@ if ($acao == 'index' && $parametro == '') {
 
         $response = array(
             "error" => false,
-            "message" => $obj
+            "message" => "sucesso",
+            "data" => $obj
         );
         echo json_encode($response);
 
@@ -223,7 +224,8 @@ if ($acao == 'index' && $parametro == '') {
 
         $response = array(
             "error" => false,
-            "message" => $obj
+            "message" => "sucesso",
+            "data" => $obj
         );
         echo json_encode($obj);
         exit;
@@ -296,7 +298,8 @@ if ($acao == 'index' && $parametro == '') {
 
         $response = array(
             "error" => false,
-            "message" => $obj
+            "message" => "sucesso",
+            "data" => $obj
         );
         echo json_encode($obj);
         exit;
@@ -307,7 +310,6 @@ if ($acao == 'show' && $parametro != '') {
     // ---------------------------------------
     // PEGA UM OPERADOR ESPECÍFICO
     // ---------------------------------------
-
 
     $db = DB::connect();
     $sql = $db->prepare("SELECT usuarios.matricula, usuarios.nome, usuarios.email, usuarios.gerencia, usuarios.turma, usuarios.url_perfil, usuarios.url_status from usuarios where usuarios.matricula = ?");
@@ -369,7 +371,8 @@ if ($acao == 'show' && $parametro != '') {
     $obj['ocorrenciasPorMes'] = $meses;
     $response = array(
         "error" => false,
-        "message" => $obj
+        "message" => "Sucesso",
+        "data" => $obj
     );
     echo json_encode($response);
 

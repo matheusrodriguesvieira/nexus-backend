@@ -54,11 +54,9 @@ $metodo = $_SERVER['REQUEST_METHOD'];
 
 
 require_once(realpath(dirname(__FILE__) . '/database/DB.php'));
-// require_once(realpath(dirname(__FILE__) . '/jwt/JWT.php'));
-// require_once(realpath(dirname(__FILE__) . '/auth/auth.php'));
-// require_once(realpath(dirname(__FILE__) . '/auth/login.php'));
-// require_once(realpath(dirname(__FILE__) . '/auth/validateToken.php'));
-require_once(realpath(dirname(__FILE__) . '/controllers/verEResolverController/verEResolverController.php'));
-// require_once(realpath(dirname(__FILE__) . '/controllers/veiculosController/veiculosController.php'));
-require_once(realpath(dirname(__FILE__) . '/controllers/usuariosController/usuariosController.php'));
-// require_once(realpath(dirname(__FILE__) . '/controllers/equipamentosController/equipamentosController.php'));
+require_once(realpath(dirname(__FILE__) . '/jwt/JWT.php'));
+require_once(realpath(dirname(__FILE__) . '/auth/auth.php'));
+require_once(realpath(dirname(__FILE__) . '/auth/login.php'));
+require_once(realpath(dirname(__FILE__) . '/auth/validateToken.php'));
+// require_once(realpath(dirname(__FILE__) . '/controllers/verEResolverController/verEResolverController.php'));
+// require_once(realpath(dirname(__FILE__) . '/controllers/usuariosController/usuariosController.php'));
