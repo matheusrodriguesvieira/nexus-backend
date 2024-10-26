@@ -2,16 +2,16 @@
 if ($api == 'validate-token') {
     if ($metodo == 'GET') {
         if ($acao == "usuarios" && $parametro == "") {
-            if (empty($_GET['login'])) {
+            if (empty($_GET['matricula'])) {
                 echo json_encode([
                     'error' => true,
-                    'message' => "Parâmetro 'login' está ausente!"
+                    'message' => "Parâmetro 'matricula' está ausente!"
                 ]);
                 exit;
             }
 
-            $login = $_GET['login'];
-            $responseValidacao = Usuarios::validarToken($login);
+            $matricula = $_GET['matricula'];
+            $responseValidacao = Authorization::validarToken($matricula);
             echo json_encode($responseValidacao);
             exit;
         }

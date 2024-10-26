@@ -7,8 +7,6 @@ header("Access-Control-Allow-Headers:Authorization, X-CSRF-Token, X-Requested-Wi
 
 
 require_once(realpath(dirname(__FILE__) . '/config/loadenv.php'));
-// Roteamento manual
-// $uri = isset($_SERVER['REQUEST_URI']) ? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : '/';
 
 
 $path = explode('/', $_GET['path']);
@@ -21,7 +19,6 @@ if (isset($path[0])) {
 }
 
 $GLOBALS['secretJWT'] = getenv('SECRET_JWT');
-
 
 
 if (isset($path[1])) {
@@ -38,25 +35,11 @@ if (isset($path[2])) {
 
 $metodo = $_SERVER['REQUEST_METHOD'];
 
-
-// Carregue as variáveis do .env
-
-// Teste as variáveis
-// $response = array(
-//     "api" => "{$api}",
-//     "acao" => "{$acao}",
-//     "parametro" => "{$parametro}",
-//     "method" => "{$metodo}"
-// );
-// echo json_encode($response);
-// exit;
-
-
-
 require_once(realpath(dirname(__FILE__) . '/database/DB.php'));
 require_once(realpath(dirname(__FILE__) . '/jwt/JWT.php'));
 require_once(realpath(dirname(__FILE__) . '/auth/auth.php'));
-require_once(realpath(dirname(__FILE__) . '/auth/login.php'));
-require_once(realpath(dirname(__FILE__) . '/auth/validateToken.php'));
+require_once(realpath(dirname(__FILE__) . '/auth/loginController.php'));
+require_once(realpath(dirname(__FILE__) . '/auth/logoutController.php'));
+require_once(realpath(dirname(__FILE__) . '/auth/validateTokenController.php'));
 // require_once(realpath(dirname(__FILE__) . '/controllers/verEResolverController/verEResolverController.php'));
-// require_once(realpath(dirname(__FILE__) . '/controllers/usuariosController/usuariosController.php'));
+require_once(realpath(dirname(__FILE__) . '/controllers/usuariosController/usuariosController.php'));

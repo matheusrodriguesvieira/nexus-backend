@@ -2,39 +2,34 @@
 
 if ($api == 'usuarios') {
     if ($metodo == "POST") {
-        if ($acao == "login" && $parametro == "") {
+        if ($acao == "logout" && $parametro == "") {
 
-            $json = file_get_contents("php://input");
-            $dados = json_decode($json, true);
-
-            if (!array_key_exists("login", $dados) || !array_key_exists("senha", $dados)) {
+            if (empty($_GET['matricula'])) {
                 echo json_encode([
                     'error' => true,
-                    "message" => "faltam informações de login ou senha."
+                    'message' => "Parâmetro 'matricula' está ausente!"
+                ]);
+                exit;
+            }
+            
+            $matricula = $_GET['matricula'];
+            $responseValidacao = Authorization::validarToken($matricula);
+
+            $matricula = addslashes(htmlspecialchars($_GET['matricula'])) ?? '';
+
+            if (!is_numeric($matricula)) {
+                echo json_encode([
+                    'error' => true,
+                    "message" => "O valor do matricula deve ser um número."
                 ]);
                 exit;
             }
 
-
-
-
-            $login = addslashes(htmlspecialchars($dados['login'])) ?? '';
-            $senha = addslashes(htmlspecialchars($dados['senha'])) ?? '';
-
-            if (!is_numeric($login)) {
-                echo json_encode([
-                    'error' => true,
-                    "message" => "O valor do login deve ser um número."
-                ]);
-                exit;
-            }
-
-            $loginResponse = Usuarios::login($login, $senha);
-            $autorizacaoResponse = Usuarios::autorizar('acesso_tela_principal', $login);
-            // echo json_encode($loginResponse);
-            // exit;
-            if ($loginResponse['error']) {
-                echo json_encode($loginResponse);
+            $logoutResponse = Authorization::logout($matricula);
+            echo json_encode($logoutResponse);
+            exit;
+            if ($logout['error']) {
+                echo json_encode($logout);
                 exit;
             } 
             if ($autorizacaoResponse['error']) {
