@@ -11,13 +11,13 @@ class Authorization
         // $rs = $db->prepare("SELECT usuarios.nome, usuarios.matricula, usuarios.senha FROM usuarios where usuarios.matricula = ?");
         $rs = $db->prepare("SELECT * FROM autorizacao where matricula = ?");
         $exec = $rs->execute([$matricula]);
-        $obj = $rs->fetchObject();
+        $obj = $rs->fetch(PDO::FETCH_ASSOC);
         $rows = $rs->rowCount();
 
         $validUsername = false;
         $validPassword = false;
         if ($rows > 0) {
-            $hash          = $obj->senha;
+            $hash          = $obj['senha'];
             $validUsername = true;
             // $validPassword = password_verify($senha, $passDB) ? true : false;
             $resposeVerificarHash = self::verificarHash($senha, $hash);
@@ -67,7 +67,7 @@ class Authorization
             $sql->execute([$token, $matricula]);
             
 
-            $permissoes = array_slice($obj2, 4);
+            $permissoes = array_slice($obj, 4);
 
             return [
                 'error' => false,
