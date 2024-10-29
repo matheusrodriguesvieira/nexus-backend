@@ -2,68 +2,86 @@
 if ($acao == 'index' && $parametro == '') {
 
     // ---------------------------------------
-    // PEGA TODOS OS OPERADORES
+    // PEGA TODOS OS usuários
     // ---------------------------------------
+    if (!empty($_GET['turma']) && !empty($_GET['gerencia'])) {
 
-    
+        $turma = $_GET['turma'];
+        $gerencia = $_GET['gerencia'];
 
-    // if (!empty($_GET['codigos']) && $_GET['codigos'] === 'true') {
-    //     $db = DB::connect();
-    //     $sql = $db->prepare("SELECT usuarios.matricula, usuarios.nome from usuarios where usuarios.matricula = usuarios.matricula and usuarios.matricula < 6");
-    //     $sql->execute();
-    //     $obj = $sql->fetchAll(PDO::FETCH_ASSOC);
-    //     if (!$obj) {
-    //         $response = array(
-    //             "message" => "Nenhum usuário encontrado!"
-    //         );
-    //         echo json_encode($response);
-    //         exit;
-    //     }
+        $db = DB::connect();
 
+        // $sql = $db->prepare("SELECT * from operadores where operadores.matricula > 5");
+        // $sql->execute();
+        // $sql = $db->prepare("SELECT operadores.matricula, usuarios.nome, operadores.disponivel, usuarios.matriculasupervisor from operadores, usuarios");
+        $sql = $db->prepare("SELECT usuarios.matricula, usuarios.nome, usuarios.email, usuarios.gerencia, usuarios.turma, usuarios.url_perfil, usuarios.url_status from usuarios where usuarios.turma ilike ? and usuarios.gerencia ilike ?");
+        $sql->execute([$turma, $gerencia]);
+        $obj = $sql->fetchAll(PDO::FETCH_ASSOC);
 
-    //     echo json_encode($obj);
-    //     exit;
-    // }
+        if (!$obj) {
+            $response = array(
+                "error" => true,
+                "message" => "Nenhum usuário encontrado!"
+            );
+            echo json_encode($response);
+        } 
 
+        for($i = 0; $i < count($obj); $i++) {
+            $obj[$i]['ocorrenciasPorMes'] = [];
 
-    // if (!empty($_GET['turma']) && !empty($_GET['gerencia'])) {
+            $meses = [
+                'Janeiro'   => 0,
+                'Fevereiro' => 0,
+                'Março'     => 0,
+                'Abril'     => 0, 
+                'Maio'      => 0,
+                'Junho'     => 0,
+                'Julho'     => 0,
+                'Agosto'    => 0,
+                'Setembro'  => 0,
+                'Outubro'   => 0,
+                'Novembro'  => 0, 
+                'Dezembro'  => 0
+            ];
+        
+            $stringSQL = "SELECT matricula, COUNT(*) AS total_ocorrencias,
+            CASE 
+            WHEN mes = 1 THEN 'Janeiro'
+            WHEN mes = 2 THEN 'Fevereiro'
+            WHEN mes = 3 THEN 'Março'
+            WHEN mes = 4 THEN 'Abril'
+            WHEN mes = 5 THEN 'Maio'
+            WHEN mes = 6 THEN 'Junho'
+            WHEN mes = 7 THEN 'Julho'
+            WHEN mes = 8 THEN 'Agosto'
+            WHEN mes = 9 THEN 'Setembro'
+            WHEN mes = 10 THEN 'Outubro'
+            WHEN mes = 11 THEN 'Novembro'
+            WHEN mes = 12 THEN 'Dezembro'
+            END AS mes
+            FROM ver_resolver
+            where matricula = ?
+            GROUP BY matricula, mes";
+        
+            $sql = $db->prepare($stringSQL);
+            $sql->execute([$obj[$i]['matricula']]);
+            $obj2 = $sql->fetchAll(PDO::FETCH_ASSOC);
+        
+            foreach ($obj2 as $resultado){
+                $meses[$resultado['mes']] = $resultado['total_ocorrencias'];
+            }
+        
+            $obj[$i]['ocorrenciasPorMes'] = $meses;
+        }
+        $response = array(
+            "error" => false,
+            "message" => "sucesso",
+            "data" => $obj
+        );
+        echo json_encode($response);
 
-    //     $turma = $_GET['turma'];
-    //     $gerencia = $_GET['gerencia'];
-
-    //     $db = DB::connect();
-
-    //     // $sql = $db->prepare("SELECT * from operadores where operadores.matricula > 5");
-    //     // $sql->execute();
-    //     // $sql = $db->prepare("SELECT operadores.matricula, usuarios.nome, operadores.disponivel, usuarios.matriculasupervisor from operadores, usuarios");
-    //     $sql = $db->prepare("SELECT operadores.matricula, usuarios.nome, usuarios.turma, gerencia.nome as gerencia, operadores.disponivel from usuarios, operadores, gerencia where operadores.matricula = usuarios.matricula and gerencia.id = usuarios.idgerencia and usuarios.matricula > 5 and usuarios.turma = ? and usuarios.idgerencia = ?");
-    //     $sql->execute([$turma, $gerencia]);
-    //     $obj = $sql->fetchAll(PDO::FETCH_ASSOC);
-
-    //     if (!$obj) {
-    //         $response = array(
-    //             "message" => "Nenhum operador encontrado!"
-    //         );
-    //         echo json_encode($response);
-    //         exit;
-    //     }
-
-    //     for ($i = 0; $i < count($obj); $i++) {
-
-
-    //         $sql = $db->prepare("SELECT * from operadores where operadores.matricula = ?");
-    //         $sql->execute([$obj[$i]['matricula']]);
-    //         $operador = $sql->fetch(PDO::FETCH_ASSOC);
-
-    //         unset($operador['matricula']);
-    //         unset($operador['disponivel']);
-
-    //         $obj[$i]['autorizadoOperar'] = $operador;
-    //     }
-
-    //     echo json_encode($obj);
-    //     exit;
-    // }
+        exit;
+    }
 
     if (empty($_GET['turma']) && empty($_GET['gerencia'])) {
         $db = DB::connect();
@@ -78,83 +96,214 @@ if ($acao == 'index' && $parametro == '') {
                 "message" => "Nenhum usuário encontrado!"
             );
             echo json_encode($response);
-        } else {
-            $response = array(
-                "error" => false,
-                "message" => $obj
-            );
-            echo json_encode($response);
+        } 
+
+        for($i = 0; $i < count($obj); $i++) {
+            $obj[$i]['ocorrenciasPorMes'] = [];
+
+            $meses = [
+                'Janeiro'   => 0,
+                'Fevereiro' => 0,
+                'Março'     => 0,
+                'Abril'     => 0, 
+                'Maio'      => 0,
+                'Junho'     => 0,
+                'Julho'     => 0,
+                'Agosto'    => 0,
+                'Setembro'  => 0,
+                'Outubro'   => 0,
+                'Novembro'  => 0, 
+                'Dezembro'  => 0
+            ];
+        
+            $stringSQL = "SELECT matricula, COUNT(*) AS total_ocorrencias,
+            CASE 
+            WHEN mes = 1 THEN 'Janeiro'
+            WHEN mes = 2 THEN 'Fevereiro'
+            WHEN mes = 3 THEN 'Março'
+            WHEN mes = 4 THEN 'Abril'
+            WHEN mes = 5 THEN 'Maio'
+            WHEN mes = 6 THEN 'Junho'
+            WHEN mes = 7 THEN 'Julho'
+            WHEN mes = 8 THEN 'Agosto'
+            WHEN mes = 9 THEN 'Setembro'
+            WHEN mes = 10 THEN 'Outubro'
+            WHEN mes = 11 THEN 'Novembro'
+            WHEN mes = 12 THEN 'Dezembro'
+            END AS mes
+            FROM ver_resolver
+            where matricula = ?
+            GROUP BY matricula, mes";
+        
+            $sql = $db->prepare($stringSQL);
+            $sql->execute([$obj[$i]['matricula']]);
+            $obj2 = $sql->fetchAll(PDO::FETCH_ASSOC);
+        
+            foreach ($obj2 as $resultado){
+                $meses[$resultado['mes']] = $resultado['total_ocorrencias'];
+            }
+        
+            $obj[$i]['ocorrenciasPorMes'] = $meses;
         }
+
+        $response = array(
+            "error" => false,
+            "message" => "sucesso",
+            "data" => $obj
+        );
+        echo json_encode($response);
 
         exit;
     }
 
-    // if (empty($_GET['gerencia'])) {
+    if (empty($_GET['gerencia'])) {
 
-    //     $turma = $_GET['turma'];
+        $turma = $_GET['turma'];
 
-    //     $db = DB::connect();
-    //     $sql = $db->prepare("SELECT operadores.matricula, usuarios.nome, usuarios.turma, gerencia.nome as gerencia, usuarios.matriculasupervisor, operadores.disponivel from usuarios, operadores, gerencia where operadores.matricula = usuarios.matricula and gerencia.id = usuarios.idgerencia and usuarios.matricula > 5 and usuarios.turma = ?");
-    //     $sql->execute([$turma]);
-    //     $obj = $sql->fetchAll(PDO::FETCH_ASSOC);
+        $db = DB::connect();
+        $sql = $db->prepare("SELECT usuarios.matricula, usuarios.nome, usuarios.email, usuarios.gerencia, usuarios.turma, usuarios.url_perfil, usuarios.url_status from usuarios where usuarios.turma ilike ?");
+        $sql->execute([$turma]);
+        $obj = $sql->fetchAll(PDO::FETCH_ASSOC);
 
 
-    //     if (!$obj) {
-    //         $response = array(
-    //             "message" => "Nenhum operador encontrado!"
-    //         );
-    //         echo json_encode($response);
-    //         exit;
-    //     }
+        if (!$obj) {
+            $response = array(
+                "error" => true,
+                "message" => "Nenhum usuário encontrado!"
+            );
+            echo json_encode($response);
+        } 
 
-    //     for ($i = 0; $i < count($obj); $i++) {
+        for($i = 0; $i < count($obj); $i++) {
+            $obj[$i]['ocorrenciasPorMes'] = [];
 
-    //         $sql = $db->prepare("SELECT * from operadores where operadores.matricula = ?");
-    //         $sql->execute([$obj[$i]['matricula']]);
-    //         $operador = $sql->fetch(PDO::FETCH_ASSOC);
+            $meses = [
+                'Janeiro'   => 0,
+                'Fevereiro' => 0,
+                'Março'     => 0,
+                'Abril'     => 0, 
+                'Maio'      => 0,
+                'Junho'     => 0,
+                'Julho'     => 0,
+                'Agosto'    => 0,
+                'Setembro'  => 0,
+                'Outubro'   => 0,
+                'Novembro'  => 0, 
+                'Dezembro'  => 0
+            ];
+        
+            $stringSQL = "SELECT matricula, COUNT(*) AS total_ocorrencias,
+            CASE 
+            WHEN mes = 1 THEN 'Janeiro'
+            WHEN mes = 2 THEN 'Fevereiro'
+            WHEN mes = 3 THEN 'Março'
+            WHEN mes = 4 THEN 'Abril'
+            WHEN mes = 5 THEN 'Maio'
+            WHEN mes = 6 THEN 'Junho'
+            WHEN mes = 7 THEN 'Julho'
+            WHEN mes = 8 THEN 'Agosto'
+            WHEN mes = 9 THEN 'Setembro'
+            WHEN mes = 10 THEN 'Outubro'
+            WHEN mes = 11 THEN 'Novembro'
+            WHEN mes = 12 THEN 'Dezembro'
+            END AS mes
+            FROM ver_resolver
+            where matricula = ?
+            GROUP BY matricula, mes";
+        
+            $sql = $db->prepare($stringSQL);
+            $sql->execute([$obj[$i]['matricula']]);
+            $obj2 = $sql->fetchAll(PDO::FETCH_ASSOC);
+        
+            foreach ($obj2 as $resultado){
+                $meses[$resultado['mes']] = $resultado['total_ocorrencias'];
+            }
+        
+            $obj[$i]['ocorrenciasPorMes'] = $meses;
+        }
 
-    //         unset($operador['matricula']);
-    //         unset($operador['disponivel']);
+        $response = array(
+            "error" => false,
+            "message" => "sucesso",
+            "data" => $obj
+        );
+        echo json_encode($obj);
+        exit;
+    }
 
-    //         $obj[$i]['autorizadoOperar'] = $operador;
-    //     }
+    if (empty($_GET['turma'])) {
 
-    //     echo json_encode($obj);
-    //     exit;
-    // }
+        $gerencia = $_GET['gerencia'];
 
-    // if (empty($_GET['turma'])) {
+        $db = DB::connect();
+        $sql = $db->prepare("SELECT usuarios.matricula, usuarios.nome, usuarios.email, usuarios.gerencia, usuarios.turma, usuarios.url_perfil, usuarios.url_status from usuarios where usuarios.gerencia ilike ?");
+        $sql->execute([$gerencia]);
+        $obj = $sql->fetchAll(PDO::FETCH_ASSOC);
 
-    //     $gerencia = $_GET['gerencia'];
+        if (!$obj) {
+            $response = array(
+                "error" => true,
+                "message" => "Nenhum usuário encontrado!"
+            );
+            echo json_encode($response);
+        }
 
-    //     $db = DB::connect();
-    //     $sql = $db->prepare("SELECT operadores.matricula, usuarios.nome, usuarios.turma, gerencia.nome as gerencia, usuarios.matriculasupervisor, operadores.disponivel from usuarios, operadores, gerencia where operadores.matricula = usuarios.matricula and gerencia.id = usuarios.idgerencia and usuarios.matricula > 5 and usuarios.idgerencia = ?");
-    //     $sql->execute([$gerencia]);
-    //     $obj = $sql->fetchAll(PDO::FETCH_ASSOC);
+        for($i = 0; $i < count($obj); $i++) {
+            $obj[$i]['ocorrenciasPorMes'] = [];
 
-    //     if (!$obj) {
-    //         $response = array(
-    //             "message" => "Nenhum operador encontrado!"
-    //         );
-    //         echo json_encode($response);
-    //         exit;
-    //     }
+            $meses = [
+                'Janeiro'   => 0,
+                'Fevereiro' => 0,
+                'Março'     => 0,
+                'Abril'     => 0, 
+                'Maio'      => 0,
+                'Junho'     => 0,
+                'Julho'     => 0,
+                'Agosto'    => 0,
+                'Setembro'  => 0,
+                'Outubro'   => 0,
+                'Novembro'  => 0, 
+                'Dezembro'  => 0
+            ];
+        
+            $stringSQL = "SELECT matricula, COUNT(*) AS total_ocorrencias,
+            CASE 
+            WHEN mes = 1 THEN 'Janeiro'
+            WHEN mes = 2 THEN 'Fevereiro'
+            WHEN mes = 3 THEN 'Março'
+            WHEN mes = 4 THEN 'Abril'
+            WHEN mes = 5 THEN 'Maio'
+            WHEN mes = 6 THEN 'Junho'
+            WHEN mes = 7 THEN 'Julho'
+            WHEN mes = 8 THEN 'Agosto'
+            WHEN mes = 9 THEN 'Setembro'
+            WHEN mes = 10 THEN 'Outubro'
+            WHEN mes = 11 THEN 'Novembro'
+            WHEN mes = 12 THEN 'Dezembro'
+            END AS mes
+            FROM ver_resolver
+            where matricula = ?
+            GROUP BY matricula, mes";
+        
+            $sql = $db->prepare($stringSQL);
+            $sql->execute([$obj[$i]['matricula']]);
+            $obj2 = $sql->fetchAll(PDO::FETCH_ASSOC);
+        
+            foreach ($obj2 as $resultado){
+                $meses[$resultado['mes']] = $resultado['total_ocorrencias'];
+            }
+        
+            $obj[$i]['ocorrenciasPorMes'] = $meses;
+        }
 
-    //     for ($i = 0; $i < count($obj); $i++) {
-
-    //         $sql = $db->prepare("SELECT * from operadores where operadores.matricula = ?");
-    //         $sql->execute([$obj[$i]['matricula']]);
-    //         $operador = $sql->fetch(PDO::FETCH_ASSOC);
-
-    //         unset($operador['matricula']);
-    //         unset($operador['disponivel']);
-
-    //         $obj[$i]['autorizadoOperar'] = $operador;
-    //     }
-
-    //     echo json_encode($obj);
-    //     exit;
-    // }
+        $response = array(
+            "error" => false,
+            "message" => "sucesso",
+            "data" => $obj
+        );
+        echo json_encode($obj);
+        exit;
+    }
 }
 
 if ($acao == 'show' && $parametro != '') {
@@ -162,11 +311,10 @@ if ($acao == 'show' && $parametro != '') {
     // PEGA UM OPERADOR ESPECÍFICO
     // ---------------------------------------
 
-
     $db = DB::connect();
     $sql = $db->prepare("SELECT usuarios.matricula, usuarios.nome, usuarios.email, usuarios.gerencia, usuarios.turma, usuarios.url_perfil, usuarios.url_status from usuarios where usuarios.matricula = ?");
     $sql->execute([$parametro]);
-    $obj = $sql->fetchObject();
+    $obj = $sql->fetch(PDO::FETCH_ASSOC);
 
     if (!$obj) {
         $response = array(
@@ -175,12 +323,58 @@ if ($acao == 'show' && $parametro != '') {
         );
         echo json_encode($response);
         exit;
-    } else{
-        $response = array(
-            "error" => false,
-            "message" => $obj
-        );
-        echo json_encode($response);
+    } 
+
+
+    $meses = [
+        'Janeiro'   => 0,
+        'Fevereiro' => 0,
+        'Março'     => 0,
+        'Abril'     => 0, 
+        'Maio'      => 0,
+        'Junho'     => 0,
+        'Julho'     => 0,
+        'Agosto'    => 0,
+        'Setembro'  => 0,
+        'Outubro'   => 0,
+        'Novembro'  => 0, 
+        'Dezembro'  => 0
+    ];
+
+    $stringSQL = "SELECT matricula, COUNT(*) AS total_ocorrencias,
+    CASE 
+	WHEN mes = 1 THEN 'Janeiro'
+	WHEN mes = 2 THEN 'Fevereiro'
+	WHEN mes = 3 THEN 'Março'
+	WHEN mes = 4 THEN 'Abril'
+	WHEN mes = 5 THEN 'Maio'
+	WHEN mes = 6 THEN 'Junho'
+	WHEN mes = 7 THEN 'Julho'
+	WHEN mes = 8 THEN 'Agosto'
+	WHEN mes = 9 THEN 'Setembro'
+	WHEN mes = 10 THEN 'Outubro'
+	WHEN mes = 11 THEN 'Novembro'
+    WHEN mes = 12 THEN 'Dezembro'
+    END AS mes
+    FROM ver_resolver
+	where matricula = ?
+    GROUP BY matricula, mes";
+
+    $sql = $db->prepare($stringSQL);
+    $sql->execute([$parametro]);
+    $obj2 = $sql->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($obj2 as $resultado){
+        $meses[$resultado['mes']] = $resultado['total_ocorrencias'];
     }
+
+    $obj['ocorrenciasPorMes'] = $meses;
+    $response = array(
+        "error" => false,
+        "message" => "Sucesso",
+        "data" => $obj
+    );
+    echo json_encode($response);
+
     exit;
 }
