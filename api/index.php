@@ -6,7 +6,7 @@ header("Access-Control-Allow-Headers:Authorization, X-CSRF-Token, X-Requested-Wi
 
 
 
-require_once(realpath(dirname(__FILE__) . '/config/loadenv.php'));
+// require_once(realpath(dirname(__FILE__) . '/config/loadenv.php'));
 
 
 $path = explode('/', $_GET['path']);
